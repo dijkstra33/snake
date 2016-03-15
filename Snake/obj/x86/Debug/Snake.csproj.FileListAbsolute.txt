@@ -1,0 +1,9 @@
+C:\Users\DNS\AppData\Local\Temporary Projects\Snake\bin\Debug\Snake.exe
+C:\Users\DNS\AppData\Local\Temporary Projects\Snake\bin\Debug\Snake.pdb
+C:\Users\DNS\AppData\Local\Temporary Projects\Snake\obj\x86\Debug\Snake.Form1.resources
+C:\Users\DNS\AppData\Local\Temporary Projects\Snake\obj\x86\Debug\Snake.Properties.Resources.resources
+C:\Users\DNS\AppData\Local\Temporary Projects\Snake\obj\x86\Debug\Snake.csproj.GenerateResource.Cache
+C:\Users\DNS\AppData\Local\Temporary Projects\Snake\obj\x86\Debug\Snake.exe
+C:\Users\DNS\AppData\Local\Temporary Projects\Snake\obj\x86\Debug\Snake.pdb
+C:\Users\DNS\documents\visual studio 2010\Projects\Snake\Snake\obj\x86\Debug\Snake.exe
+C:\Users\DNS\documents\visual studio 2010\Projects\Snake\Snake\obj\x86\Debug\Snake.pdb
