@@ -46,15 +46,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\..\..\..\..\..\..\projects\Snake%28Valek%29\Snake.cs">
+    <Compile Include="Snake.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="..\..\..\..\..\..\..\projects\Snake%28Valek%29\Snake.Designer.cs">
+    <Compile Include="Snake.Designer.cs">
       <DependentUpon>Snake.cs</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <EmbeddedResource Include="..\..\..\..\..\..\..\projects\Snake%28Valek%29\Snake.resx">
+    <EmbeddedResource Include="Snake.resx">
       <DependentUpon>Snake.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
