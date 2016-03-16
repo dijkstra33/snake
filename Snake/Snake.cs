@@ -12,7 +12,7 @@ namespace Snake
     public partial class Form1 : Form
     {
         const int n = 10;
-        enum State { head, tail, body, food, empty };
+        //enum State { head, tail, body, food, empty };
         int[,] board = new int[n, n];
         int[] index1 = new int[n*n];
         int[] index2 = new int[n*n];
@@ -29,15 +29,6 @@ namespace Snake
             pictureBox1.Size = new Size(40 + n * size, 40 + n * size);
             ClientSize = new Size(300 + n * size, 40 + n * size);
             
-
-            //Brush MyBrush = Brushes.Red;
-            //SolidBrush FillBrush = new SolidBrush(Color.Black);
-            //e.Graphics.FillRectangle(FillBrush, x, y, size, size);
-            //FillBrush = new SolidBrush(Color.Red);
-            //e.Graphics.FillRectangle(MyBrush, x + size*5 + 1, y + size*5 + 1, size - 1, size - 1);
-            //e.Graphics.FillRectangle(MyBrush, x + size * 6 + 1, y + size * 5 + 1, size - 1, size - 1);
-
-
             //Змейка
             board[5, 5] = 1;
             for (int i = 0; i < n*n; i++)
@@ -49,9 +40,6 @@ namespace Snake
             index2[0] = 5;
             foodindex1 = random.Next(0, 10);
             foodindex2 = random.Next(0, 10);
-            //MyBrush = Brushes.Blue;
-            //e.Graphics.FillRectangle(MyBrush, x + size * 5 + 1, y + size * 5 + 1, size - 1, size - 1);
-            //Moving("Up", 1);
         }
 
         private void pictureBox1_Paint(object sender, PaintEventArgs e)
