@@ -11,7 +11,7 @@ namespace Snake
 {
     public partial class Form1 : Form
     {
-        const int n = 5;
+        const int n = 10;
         int[,] board = new int[n, n];
         int[] index1 = new int[n*n];
         int[] index2 = new int[n*n];
@@ -28,8 +28,8 @@ namespace Snake
         {
             InitializeComponent();
             InitializeTimer();
-            timer1.Start();
-            timer1.Enabled = true;
+            timer1.Enabled = false;
+            
             pictureBox1.Size = new Size(40 + n * size, 40 + n * size);
             ClientSize = new Size(40 + n * size, 40 + n * size);
             
@@ -71,21 +71,7 @@ namespace Snake
                     e.Graphics.FillRectangle(MyBrush, x + size * index1[i] + 1, y + size * index2[i] + 1, size - 1, size - 1);
             }
 
-            if ((index1[0] == foodindex1) && (index2[0] == foodindex2))
-            {
-                SnakeLength++;
-                index1[SnakeLength - 1] = index1[SnakeLength - 2];
-                index2[SnakeLength - 1] = index2[SnakeLength - 2];
-                foodindex1 = random.Next(0, n);
-                foodindex2 = random.Next(0, n);
-
-                while (board[foodindex1,foodindex2] == 1)
-                {
-                    foodindex1 = random.Next(0, n);
-                    foodindex2 = random.Next(0, n);
-                }
-                board[foodindex2, foodindex1] = 2;
-            }
+            
             //Рисование еды
             e.Graphics.FillRectangle(FoodBrush, x + size * foodindex1 + 1, y + size * foodindex2 + 1, size - 1, size - 1);
                  
@@ -94,7 +80,7 @@ namespace Snake
         private void InitializeTimer()
         {
             timer1.Interval = 500;
-            timer1.Enabled = true;
+            //timer1.Enabled = true;
             timer1.Tick += new EventHandler(timer1_Tick);
             
         }
@@ -103,18 +89,6 @@ namespace Snake
         {
             Moving(direction);
             pictureBox1.Refresh();
-        }
-
-        private void PressedKey(KeyEventArgs e)
-        {
-            if (e.KeyCode == Keys.Up)
-                direction = "Up";
-            if (e.KeyCode == Keys.Down)
-                direction = "Down";
-            if (e.KeyCode == Keys.Left)
-                direction = "Left";
-            if (e.KeyCode == Keys.Right)
-                direction = "Right";
         }
 
         private void OnPress(KeyEventArgs e)
@@ -142,6 +116,7 @@ namespace Snake
                     {
                         timer1.Enabled = false;
                         MessageBox.Show("You lost! =( Your Score: " + SnakeLength);
+                        Restart();
                         return;
                     }
                     index1[i] = index1[i - 1];
@@ -151,6 +126,7 @@ namespace Snake
                 {
                     timer1.Enabled = false;
                     MessageBox.Show("You lost! =( Your Score: " + SnakeLength);
+                    Restart();
                     return;
                 }
                 index2[0]--;
@@ -167,6 +143,7 @@ namespace Snake
                     {
                         timer1.Enabled = false;
                         MessageBox.Show("You lost! =( Your Score: " + SnakeLength);
+                        Restart();
                         return;
                     }
                     index1[i] = index1[i - 1];
@@ -176,6 +153,7 @@ namespace Snake
                 {
                     timer1.Enabled = false;
                     MessageBox.Show("You lost! =( Your Score: " + SnakeLength);
+                    Restart();
                     return;
                 }
             index2[0]++;
@@ -192,6 +170,7 @@ namespace Snake
                     {
                         timer1.Enabled = false;
                         MessageBox.Show("You lost! =( Your Score: " + SnakeLength);
+                        Restart();
                         return;
                     }
                     index1[i] = index1[i - 1];
@@ -201,6 +180,7 @@ namespace Snake
                 {
                     timer1.Enabled = false;
                     MessageBox.Show("You lost! =( Your Score: " + SnakeLength);
+                    Restart();
                     return;
                 }
                 index1[0]--;
@@ -217,6 +197,7 @@ namespace Snake
                     {
                         timer1.Enabled = false;
                         MessageBox.Show("You lost! =( Your Score: " + SnakeLength);
+                        Restart();
                         return;
                     }
                     index1[i] = index1[i - 1];
@@ -226,6 +207,7 @@ namespace Snake
                 {
                     timer1.Enabled = false;
                     MessageBox.Show("You lost! =( Your Score: " + SnakeLength);
+                    Restart();
                     return;
                 }
                 index1[0]++;
@@ -233,14 +215,44 @@ namespace Snake
                 index1[SnakeLength] = -1;
                 index2[SnakeLength] = -1;
             }
+
+            if ((index1[0] == foodindex1) && (index2[0] == foodindex2))
+            {
+                SnakeLength++;
+                index1[SnakeLength - 1] = index1[SnakeLength - 2];
+                index2[SnakeLength - 1] = index2[SnakeLength - 2];
+                foodindex1 = random.Next(0, n);
+                foodindex2 = random.Next(0, n);
+
+                while (board[foodindex1, foodindex2] == 1)
+                {
+                    foodindex1 = random.Next(0, n);
+                    foodindex2 = random.Next(0, n);
+                }
+                board[foodindex2, foodindex1] = 2;
+            }
         }
 
         private void Form1_KeyDown(object sender, KeyEventArgs e)
         {
+            timer1.Enabled = true;
             if (e.KeyCode == Keys.Up) direction = "Up";
             if (e.KeyCode == Keys.Down) direction = "Down";
             if (e.KeyCode == Keys.Left) direction = "Left";
             if (e.KeyCode == Keys.Right) direction = "Right";
+        }
+
+        private void Restart()
+        {
+            timer1.Enabled = false;
+            for (int i = 0; i < SnakeLength; i++)
+            {
+                index1[i] = 0;
+                index2[i] = 0;
+            }
+            index1[0] = n / 2;
+            index2[0] = n / 2;
+            SnakeLength = 1;
         }
     }
 }
