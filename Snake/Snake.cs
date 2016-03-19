@@ -11,35 +11,40 @@ namespace Snake
 {
     public partial class Form1 : Form
     {
-        const int n = 10;
-        //enum State { head, tail, body, food, empty };
+        const int n = 5;
         int[,] board = new int[n, n];
         int[] index1 = new int[n*n];
         int[] index2 = new int[n*n];
         int SnakeLength = 1;
         Random random = new Random();
+        Timer timer1 = new Timer();
         int foodindex1, foodindex2;
         int x = 20, y = 20, size = 30;
         int dx = 0, dy = 0;
-        string direction = "Up";
+        string direction = "Right";
+        //bool test = false;
 
         public Form1()
         {
             InitializeComponent();
+            InitializeTimer();
+            timer1.Start();
+            timer1.Enabled = true;
             pictureBox1.Size = new Size(40 + n * size, 40 + n * size);
-            ClientSize = new Size(300 + n * size, 40 + n * size);
+            ClientSize = new Size(40 + n * size, 40 + n * size);
             
             //Змейка
-            board[5, 5] = 1;
+            board[n/2, n/2] = 1;
             for (int i = 0; i < n*n; i++)
             {
                 index1[i] = -1;
                 index2[i] = -1;
             }
-            index1[0] = 5;
-            index2[0] = 5;
-            foodindex1 = random.Next(0, 10);
-            foodindex2 = random.Next(0, 10);
+            index1[0] = n/2;
+            index2[0] = n/2;
+            foodindex1 = random.Next(0, n);
+            foodindex2 = random.Next(0, n);
+            board[foodindex2, foodindex1] = 2;
         }
 
         private void pictureBox1_Paint(object sender, PaintEventArgs e)
@@ -49,6 +54,7 @@ namespace Snake
             Brush MyBrush = Brushes.Blue;
             Brush FoodBrush = Brushes.Red;
             dx = dy = 0;
+
             for (int i = 0; i < n + 1; i++)
             {
                 e.Graphics.DrawLine(MyPen, x, y + dy, x + n * size, y + dy);
@@ -56,6 +62,8 @@ namespace Snake
                 dx += size;
                 dy += size;
             }
+            for (int i = 0; i < SnakeLength; i++)
+                board[index2[i], index1[i]] = 1;
 
             for (int i = 0; i < SnakeLength; i++)
             {
@@ -66,12 +74,29 @@ namespace Snake
             if ((index1[0] == foodindex1) && (index2[0] == foodindex2))
             {
                 SnakeLength++;
-                foodindex1 = random.Next(0, 10);
-                foodindex2 = random.Next(0, 10);
+                index1[SnakeLength - 1] = index1[SnakeLength - 2];
+                index2[SnakeLength - 1] = index2[SnakeLength - 2];
+                foodindex1 = random.Next(0, n);
+                foodindex2 = random.Next(0, n);
+
+                while (board[foodindex1,foodindex2] == 1)
+                {
+                    foodindex1 = random.Next(0, n);
+                    foodindex2 = random.Next(0, n);
+                }
+                board[foodindex2, foodindex1] = 2;
             }
             //Рисование еды
             e.Graphics.FillRectangle(FoodBrush, x + size * foodindex1 + 1, y + size * foodindex2 + 1, size - 1, size - 1);
                  
+        }
+
+        private void InitializeTimer()
+        {
+            timer1.Interval = 500;
+            timer1.Enabled = true;
+            timer1.Tick += new EventHandler(timer1_Tick);
+            
         }
 
         private void timer1_Tick(object sender, EventArgs e)
@@ -80,20 +105,38 @@ namespace Snake
             pictureBox1.Refresh();
         }
 
-        private void InitializeTimer()
+        private void PressedKey(KeyEventArgs e)
         {
-            timer1.Interval = 500;
-            timer1.Tick += new EventHandler(timer1_Tick);
-            timer1.Enabled = true;
-            button1.Text = "Stop";
-            button1.Click += new EventHandler(button1_Click);
+            if (e.KeyCode == Keys.Up)
+                direction = "Up";
+            if (e.KeyCode == Keys.Down)
+                direction = "Down";
+            if (e.KeyCode == Keys.Left)
+                direction = "Left";
+            if (e.KeyCode == Keys.Right)
+                direction = "Right";
+        }
+
+        private void OnPress(KeyEventArgs e)
+        {
+            Moving(direction);
+            pictureBox1.Refresh();
         }
 
         private void Moving(string direction) //Перемещение
         {
+            for (int i = 0; i < n; i++)
+            {
+                for (int j = 0; j < n; j++)
+                {
+                    Console.Write(board[i, j]);
+                }
+                Console.WriteLine();
+            }
             if (direction == "Up")
             {
-                for (int i = SnakeLength; i > 0; i--)
+                board[index2[SnakeLength - 1], index1[SnakeLength - 1]] = 0;
+                for (int i = SnakeLength - 1; i > 0; i--)
                 {
                     if((index2[i] == index2[0] - 1) && (index1[i] == index1[0]))
                     {
@@ -111,11 +154,13 @@ namespace Snake
                     return;
                 }
                 index2[0]--;
+                board[index2[0], index1[0]] = 1;
                 index1[SnakeLength] = -1;
                 index2[SnakeLength] = -1;
             }
             if (direction == "Down")
             {
+                board[index2[SnakeLength - 1], index1[SnakeLength - 1]] = 0;
                 for (int i = SnakeLength; i > 0; i--)
                 {
                     if ((index2[i] == index2[0] + 1) && (index1[i] == index1[0]))
@@ -127,18 +172,20 @@ namespace Snake
                     index1[i] = index1[i - 1];
                     index2[i] = index2[i - 1];
                 }
-                if (index2[0] + 1 > 9)
+                if (index2[0] + 1 > n - 1)
                 {
                     timer1.Enabled = false;
                     MessageBox.Show("You lost! =( Your Score: " + SnakeLength);
                     return;
                 }
-                index2[0]++;
-                index1[SnakeLength] = -1;
-                index2[SnakeLength] = -1;
+            index2[0]++;
+            board[index2[0], index1[0]] = 1;
+            index1[SnakeLength] = -1;
+            index2[SnakeLength] = -1;
             }
             if (direction == "Left")
             {
+                board[index2[SnakeLength - 1], index1[SnakeLength - 1]] = 0;
                 for (int i = SnakeLength; i > 0; i--)
                 {
                     if ((index2[i] == index2[0]) && (index1[i] == index1[0] - 1))
@@ -156,12 +203,14 @@ namespace Snake
                     MessageBox.Show("You lost! =( Your Score: " + SnakeLength);
                     return;
                 }
-                    index1[0]--;
-                    index1[SnakeLength] = -1;
-                    index2[SnakeLength] = -1;
+                index1[0]--;
+                board[index2[0], index1[0]] = 1;
+                index1[SnakeLength] = -1;
+                index2[SnakeLength] = -1;
             }
             if (direction == "Right")
             {
+                board[index2[SnakeLength - 1], index1[SnakeLength - 1]] = 0;
                 for (int i = SnakeLength; i > 0; i--)
                 {
                     if ((index2[i] == index2[0]) && (index1[i] == index1[0] + 1))
@@ -173,50 +222,25 @@ namespace Snake
                     index1[i] = index1[i - 1];
                     index2[i] = index2[i - 1];
                 }
-                if (index1[0] + 1 > 9)
+                if (index1[0] + 1 > n - 1)
                 {
                     timer1.Enabled = false;
                     MessageBox.Show("You lost! =( Your Score: " + SnakeLength);
                     return;
                 }
-                    index1[0]++;
-                    index1[SnakeLength] = -1;
-                    index2[SnakeLength] = -1;
+                index1[0]++;
+                board[index2[0], index1[0]] = 1;
+                index1[SnakeLength] = -1;
+                index2[SnakeLength] = -1;
             }
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private void Form1_KeyDown(object sender, KeyEventArgs e)
         {
-            if (button1.Text == "Stop")
-            {
-                button1.Text = "Start";
-                timer1.Enabled = false;
-            }
-            else
-            {
-                button1.Text = "Stop";
-                timer1.Enabled = true;
-            }
-        }
-
-        private void UpButton_Click(object sender, EventArgs e)
-        {
-            direction = "Up";
-        }
-
-        private void DownButton_Click(object sender, EventArgs e)
-        {
-            direction = "Down";
-        }
-
-        private void LeftButton_Click(object sender, EventArgs e)
-        {
-            direction = "Left";
-        }
-
-        private void RightButton_Click(object sender, EventArgs e)
-        {
-            direction = "Right";
+            if (e.KeyCode == Keys.Up) direction = "Up";
+            if (e.KeyCode == Keys.Down) direction = "Down";
+            if (e.KeyCode == Keys.Left) direction = "Left";
+            if (e.KeyCode == Keys.Right) direction = "Right";
         }
     }
 }
