@@ -14,29 +14,30 @@ namespace Snake
     {
         private const int N = 10;
 
-        private enum CellType
-        {
-            Empty,
-            Body,
-            Food
-        }
-
+        private enum CellType                          
+        {                                              
+            Empty,                                     
+            Body,                                      
+            Food                                       
+        }                                              
+                                                       
         private CellType[,] board = new CellType[N, N];
         private Point[] snakeSegments = new Point[N*N];
-        private int snakeLength = 1;
-        private int offsetX;
-        private int offsetY;
-        private Random random = new Random();
-        private Timer timer1 = new Timer();
-        private Point food;
-        private int x = 0;
-        private int y = 0;
-        private int size = 30;
- 
-        private string direction = "Right";
-
-        public Form1()
-        {
+        private Point[] freeCells = new Point[N*N];
+        private int snakeLength = 1;                   
+        private int offsetX;                           
+        private int offsetY;                           
+        private Random random = new Random();          
+        private Timer timer1 = new Timer();            
+        private Point food;                            
+        private int x = 0;                             
+        private int y = 0;                             
+        private int size = 30;                         
+                                                       
+        private string direction = "Right";            
+                                                       
+        public Form1()                                 
+        {                                              
             InitializeComponent();
             InitializeTimer();
             timer1.Enabled = false;
@@ -81,7 +82,6 @@ namespace Snake
                 dx += size;
                 dy += size;
             }
-
             //Рисование змейки
             e.Graphics.FillRectangle(snakeHeadBrush, x + size*snakeSegments[0].X + 1, y + size*snakeSegments[0].Y + 1,
                 size - 1, size - 1);
@@ -91,7 +91,8 @@ namespace Snake
                         y + size*snakeSegments[i].Y + 1, size - 1, size - 1);
 
             //Рисование еды
-            e.Graphics.FillRectangle(foodBrush, x + size*food.X + 1, y + size*food.Y + 1, size - 1, size - 1);
+            if(food.X != -1 && food.Y != -1)
+                e.Graphics.FillRectangle(foodBrush, x + size*food.X + 1, y + size*food.Y + 1, size - 1, size - 1);
         }
 
         private void InitializeTimer()
@@ -130,19 +131,27 @@ namespace Snake
         {
             timer1.Enabled = false;
             timer1.Interval = 500;
+            ScoreLabel.Text = "0";
             for (int i = 0; i < snakeLength; i++)
             {
-                snakeSegments[i].X = 0;
-                snakeSegments[i].Y = 0;
+                snakeSegments[i].X = -1;
+                snakeSegments[i].Y = -1;
             }
+            snakeLength = 1;
             for (int i = 0; i < N; i++)
                 for (int j = 0; j < N; j++)
                     board[i, j] = CellType.Empty;
             snakeSegments[0].X = N/2;
             snakeSegments[0].Y = N/2;
             board[snakeSegments[0].Y, snakeSegments[0].X] = CellType.Body;
-            snakeLength = 1;
+            do
+            {
+                food.X = random.Next(0, N);
+                food.Y = random.Next(0, N);
+            } while (board[food.Y, food.X] == CellType.Body);
+            board[food.Y, food.X] = CellType.Food;
             pictureBox1.Refresh();
+            
         }
 
         private void Moving(string dir)
@@ -180,9 +189,11 @@ namespace Snake
                 return;
             }
 
-            if ((snakeSegments[0].X + offsetX == food.X) && (snakeSegments[0].Y + offsetY == food.Y))
+            //if ((snakeSegments[0].X + offsetX == food.X) && (snakeSegments[0].Y + offsetY == food.Y))
+            if (board[snakeSegments[0].Y + offsetY,snakeSegments[0].X + offsetX] == CellType.Food)
             {
                 snakeLength++;
+                ScoreLabel.Text = (snakeLength-1).ToString();
                 timer1.Interval -= 5;
                 for (int i = snakeLength - 1; i > 0; i--)
                 {
@@ -191,14 +202,39 @@ namespace Snake
                 }
                 snakeSegments[0].X = food.X;
                 snakeSegments[0].Y = food.Y;
-                board[food.Y, food.X] = CellType.Body;
-                do
-                {
-                    food.X = random.Next(0, N);
-                    food.Y = random.Next(0, N);
-                } while (board[food.Y, food.X] == CellType.Body);
 
-                board[food.Y, food.X] = CellType.Food;
+                board[food.Y, food.X] = CellType.Body;
+                food.X = -1;
+                food.Y = -1;
+
+                int k = 0;
+                for (int i = 0; i < N; i++)
+                {
+                    for (int j = 0; j < N; j++)
+                    {
+                        if (board[i, j] == CellType.Empty)
+                        {
+                            freeCells[k].X = j;
+                            freeCells[k].Y = i;
+                            k++;
+                        }
+                    }
+                }
+                if (k == 0)
+                {
+                    timer1.Stop();
+                    pictureBox1.Refresh();
+                    MessageBox.Show("You win! =) Your score: " + (snakeLength - 1));
+                    Restart();
+                    return;
+                }
+                else
+                {
+                    int freeCell = random.Next(0, k);
+                    food.X = freeCells[freeCell].X;
+                    food.Y = freeCells[freeCell].Y;
+                    board[food.Y, food.X] = CellType.Food;
+                }
                 pictureBox1.Refresh();
             }
             else
