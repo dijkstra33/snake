@@ -3,96 +3,85 @@ using System.Drawing;
 using System.Windows.Forms;
 
 namespace Snake
-{ 
-    public struct Point
+{
+    public enum CellType
     {
-        public int X;
-        public int Y;
+        Empty,
+        Body,
+        Food
+    }
+
+    public enum Direction
+    {
+        Up,
+        Down,
+        Left,
+        Right
     }
 
     public partial class Form1 : Form
     {
-        private const int N = 10;
+        private const int CellsAmount = 10;
+        private const int CellSize = 30;
 
-        private enum CellType                          
-        {                                              
-            Empty,                                     
-            Body,                                      
-            Food                                       
-        }                                              
-                                                       
-        private CellType[,] board = new CellType[N, N];
-        private Point[] snakeSegments = new Point[N*N];
-        private Point[] freeCells = new Point[N*N];
-        private int snakeLength = 1;                   
-        private int offsetX;                           
-        private int offsetY;                           
-        private Random random = new Random();          
-        private Timer timer1 = new Timer();            
-        private Point food;                            
-        private int x = 0;                             
-        private int y = 0;                             
-        private int size = 30;                         
-                                                       
-        private string direction = "Right";            
-                                                       
-        public Form1()                                 
-        {                                              
+        private CellType[,] board = new CellType[CellsAmount, CellsAmount];
+        private Point[] snakeSegments = new Point[CellsAmount*CellsAmount];
+        private Point[] freeCells = new Point[CellsAmount*CellsAmount];
+        private int snakeLength = 1;
+        private int offsetX;
+        private int offsetY;
+        private Random random = new Random();
+        private Timer timer1 = new Timer();
+        private Point food;
+        private Direction currentSnakeDirection;
+
+        public Form1()
+        {
             InitializeComponent();
             InitializeTimer();
-            timer1.Enabled = false;
-            ClientSize = new Size(N*size + 2*pictureBox1.Location.X, N*size + 2*pictureBox1.Location.Y);
-            pictureBox1.Size = new Size(N*size + 1, N*size + 1);
-            //Змейка
-            for (int i = 0; i < N*N; i++)
+            ClientSize = new Size(CellsAmount*CellSize + 2*pictureBox1.Location.X, CellsAmount*CellSize + 2*pictureBox1.Location.Y);
+            pictureBox1.Size = new Size(CellsAmount*CellSize + 1, CellsAmount*CellSize + 1);
+            Restart();
+        }
+
+        private void DrawSnake(PaintEventArgs e)
+        {
+            Brush snakeHeadBrush = Brushes.Blue;
+            Brush snakeBodyBrush = Brushes.DarkViolet;
+            e.Graphics.FillRectangle(snakeHeadBrush, CellSize*snakeSegments[0].X + 1, CellSize*snakeSegments[0].Y + 1,
+                CellSize - 1, CellSize - 1);
+            for (int i = 1; i < snakeLength; i++)
+                if ((snakeSegments[i].X != -1) && (snakeSegments[i].Y != -1))
+                    e.Graphics.FillRectangle(snakeBodyBrush, CellSize*snakeSegments[i].X + 1,
+                        CellSize*snakeSegments[i].Y + 1, CellSize - 1, CellSize - 1);
+        }
+
+        private void DrawLines(PaintEventArgs e)
+        {
+            int dx = 0;
+            int dy = 0;
+            Pen linePen = Pens.Black;
+            for (int i = 0; i < CellsAmount + 1; i++)
             {
-                snakeSegments[i].X = -1;
-                snakeSegments[i].Y = -1;
+                e.Graphics.DrawLine(linePen, 0, dy, CellsAmount*CellSize, dy);
+                e.Graphics.DrawLine(linePen, dx, 0, dx, CellsAmount*CellSize);
+                dx += CellSize;
+                dy += CellSize;
             }
-            for (int i = 0; i < N; i++)
-                for (int j = 0; j < N; j++)
-                    board[i, j] = CellType.Empty;
-            snakeSegments[0].X = N/2;
-            snakeSegments[0].Y = N/2;
-            board[snakeSegments[0].Y, snakeSegments[0].X] = CellType.Body;
-            //Еда
-            do
-            {
-                food.X = random.Next(0, N);
-                food.Y = random.Next(0, N);
-            } while (board[food.Y, food.X] == CellType.Body);
-            board[food.Y, food.X] = CellType.Food;
+        }
+
+        private void DrawFood(PaintEventArgs e)
+        {
+            Brush foodBrush = Brushes.Red;
+            e.Graphics.FillRectangle(foodBrush, CellSize*food.X + 1, CellSize*food.Y + 1, CellSize - 1, CellSize - 1);
         }
 
 
         private void pictureBox1_Paint(object sender, PaintEventArgs e)
         {
-            Pen linePen = Pens.Black;
-            Brush snakeBodyBrush = Brushes.DarkViolet;
-            Brush foodBrush = Brushes.Red;
-            Brush snakeHeadBrush = Brushes.Blue;
-            int dx = 0;
-            int dy = 0;
-
-            //Рисование линий
-            for (int i = 0; i < N + 1; i++)
-            {
-                e.Graphics.DrawLine(linePen, x, y + dy, x + N*size, y + dy);
-                e.Graphics.DrawLine(linePen, x + dx, y, x + dx, y + N*size);
-                dx += size;
-                dy += size;
-            }
-            //Рисование змейки
-            e.Graphics.FillRectangle(snakeHeadBrush, x + size*snakeSegments[0].X + 1, y + size*snakeSegments[0].Y + 1,
-                size - 1, size - 1);
-            for (int i = 1; i < snakeLength; i++)
-                if ((snakeSegments[i].X != -1) && (snakeSegments[i].Y != -1))
-                    e.Graphics.FillRectangle(snakeBodyBrush, x + size*snakeSegments[i].X + 1,
-                        y + size*snakeSegments[i].Y + 1, size - 1, size - 1);
-
-            //Рисование еды
-            if(food.X != -1 && food.Y != -1)
-                e.Graphics.FillRectangle(foodBrush, x + size*food.X + 1, y + size*food.Y + 1, size - 1, size - 1);
+            DrawLines(e);
+            DrawSnake(e);
+            DrawFood(e);
         }
 
         private void InitializeTimer()
@@ -103,7 +92,7 @@ namespace Snake
 
         private void timer1_Tick(object sender, EventArgs e)
         {
-            Moving(direction);
+            Moving(currentSnakeDirection);
         }
 
         private void Form1_KeyDown(object sender, KeyEventArgs e)
@@ -111,19 +100,19 @@ namespace Snake
             timer1.Enabled = true;
             if (e.KeyCode == Keys.Up)
             {
-                direction = "Up";
+                currentSnakeDirection = Direction.Up;
             }
             if (e.KeyCode == Keys.Down)
             {
-                direction = "Down";
+                currentSnakeDirection = Direction.Down;
             }
             if (e.KeyCode == Keys.Left)
             {
-                direction = "Left";
+                currentSnakeDirection = Direction.Left;
             }
             if (e.KeyCode == Keys.Right)
             {
-                direction = "Right";
+                currentSnakeDirection = Direction.Right;
             }
         }
 
@@ -132,40 +121,40 @@ namespace Snake
             timer1.Enabled = false;
             timer1.Interval = 500;
             ScoreLabel.Text = "0";
-            for (int i = 0; i < snakeLength; i++)
+            for (int i = 0; i < CellsAmount*CellsAmount; i++)
             {
                 snakeSegments[i].X = -1;
                 snakeSegments[i].Y = -1;
             }
-            snakeLength = 1;
-            for (int i = 0; i < N; i++)
-                for (int j = 0; j < N; j++)
+            for (int i = 0; i < CellsAmount; i++)
+                for (int j = 0; j < CellsAmount; j++)
                     board[i, j] = CellType.Empty;
-            snakeSegments[0].X = N/2;
-            snakeSegments[0].Y = N/2;
+            snakeLength = 1;
+            snakeSegments[0].X = CellsAmount/2;
+            snakeSegments[0].Y = CellsAmount/2;
             board[snakeSegments[0].Y, snakeSegments[0].X] = CellType.Body;
             do
             {
-                food.X = random.Next(0, N);
-                food.Y = random.Next(0, N);
+                food.X = random.Next(0, CellsAmount);
+                food.Y = random.Next(0, CellsAmount);
             } while (board[food.Y, food.X] == CellType.Body);
             board[food.Y, food.X] = CellType.Food;
+            currentSnakeDirection = Direction.Right;
             pictureBox1.Refresh();
-            
         }
 
-        private void Moving(string dir)
+        private void Moving(Direction dir)
         {
             offsetX = 0;
             offsetY = 0;
 
-            if (dir == "Up")
+            if (dir == Direction.Up)
                 offsetY = -1;
-            if (dir == "Down")
+            if (dir == Direction.Down)
                 offsetY = 1;
-            if (dir == "Left")
+            if (dir == Direction.Left)
                 offsetX = -1;
-            if (dir == "Right")
+            if (dir == Direction.Right)
                 offsetX = 1;
             if ((snakeSegments[0].X + offsetX == snakeSegments[1].X) &&
                 (snakeSegments[0].Y + offsetY == snakeSegments[1].Y))
@@ -179,8 +168,8 @@ namespace Snake
 
             if ((newHeadPositionY < 0) ||
                 (newHeadPositionX < 0) ||
-                (newHeadPositionY > N - 1) ||
-                (newHeadPositionX > N - 1) ||
+                (newHeadPositionY > CellsAmount - 1) ||
+                (newHeadPositionX > CellsAmount - 1) ||
                 (board[newHeadPositionY, newHeadPositionX] == CellType.Body))
             {
                 timer1.Enabled = false;
@@ -189,11 +178,10 @@ namespace Snake
                 return;
             }
 
-            //if ((snakeSegments[0].X + offsetX == food.X) && (snakeSegments[0].Y + offsetY == food.Y))
-            if (board[snakeSegments[0].Y + offsetY,snakeSegments[0].X + offsetX] == CellType.Food)
+            if (board[snakeSegments[0].Y + offsetY, snakeSegments[0].X + offsetX] == CellType.Food)
             {
                 snakeLength++;
-                ScoreLabel.Text = (snakeLength-1).ToString();
+                ScoreLabel.Text = (snakeLength - 1).ToString();
                 timer1.Interval -= 5;
                 for (int i = snakeLength - 1; i > 0; i--)
                 {
@@ -208,9 +196,9 @@ namespace Snake
                 food.Y = -1;
 
                 int k = 0;
-                for (int i = 0; i < N; i++)
+                for (int i = 0; i < CellsAmount; i++)
                 {
-                    for (int j = 0; j < N; j++)
+                    for (int j = 0; j < CellsAmount; j++)
                     {
                         if (board[i, j] == CellType.Empty)
                         {
@@ -228,13 +216,10 @@ namespace Snake
                     Restart();
                     return;
                 }
-                else
-                {
-                    int freeCell = random.Next(0, k);
-                    food.X = freeCells[freeCell].X;
-                    food.Y = freeCells[freeCell].Y;
-                    board[food.Y, food.X] = CellType.Food;
-                }
+                int freeCell = random.Next(0, k);
+                food.X = freeCells[freeCell].X;
+                food.Y = freeCells[freeCell].Y;
+                board[food.Y, food.X] = CellType.Food;
                 pictureBox1.Refresh();
             }
             else
